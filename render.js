@@ -16,16 +16,18 @@ class Renderer {
         const cxt = this.cxt;
         cxt.strokeStyle = color;
         cxt.lineWidth = thickness;
-        
+
         cxt.beginPath();
         cxt.moveTo(sx, sy);
         cxt.lineTo(ex, ey);
         cxt.stroke();
     }
 
-    drawPolygon(points, color) {
+    drawPolygon(points, fillColor, outlineColor, thickness = 2) {
         const cxt = this.cxt;
-        cxt.fillStyle = color;
+        cxt.strokeStyle = outlineColor;
+        cxt.fillStyle = fillColor;
+        cxt.lineWidth = thickness;
 
         cxt.beginPath();
         cxt.moveTo(points[0][0], points[0][1]);
@@ -34,10 +36,6 @@ class Renderer {
         }
         cxt.closePath();
         cxt.fill();
+        cxt.stroke();
     }
 }
-
-
-const renderer = new Renderer();
-renderer.drawLine(0, 0, 100, 100, "red");
-renderer.drawPolygon([[200, 200], [200, 300], [300, 200]], "green");
