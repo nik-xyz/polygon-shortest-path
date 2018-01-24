@@ -23,16 +23,16 @@ class Renderer {
         cxt.stroke();
     }
 
-    drawPolygon(points, fillColor, outlineColor, thickness = 2) {
+    drawPolygon(poly, fillColor, outlineColor, thickness = 2) {
         const cxt = this.cxt;
         cxt.strokeStyle = outlineColor;
         cxt.fillStyle = fillColor;
         cxt.lineWidth = thickness;
 
         cxt.beginPath();
-        cxt.moveTo(points[0][0], points[0][1]);
-        for(const point of points) {
-            cxt.lineTo(point[0], point[1]);
+        cxt.moveTo(poly.vertices[0][0], poly.vertices[0][1]);
+        for(const vertex of poly.vertices) {
+            cxt.lineTo(vertex[0], vertex[1]);
         }
         cxt.closePath();
         cxt.fill();
