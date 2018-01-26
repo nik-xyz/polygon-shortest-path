@@ -12,7 +12,7 @@ class Renderer {
         this.canvas.height = window.innerHeight;
     }
 
-    drawLine(sx, sy, ex, ey, color, thickness = 2) {
+    drawLine(sx, sy, ex, ey, color, thickness = 1) {
         const cxt = this.cxt;
         cxt.strokeStyle = color;
         cxt.lineWidth = thickness;

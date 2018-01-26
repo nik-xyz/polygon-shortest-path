@@ -48,13 +48,57 @@ function linesIntersect(line0, line1) {
     return true;
 }
 
-function getAccessableVertices(vertex, polygons) {
-    const accessable = [];
 
+function lineIsBetweenEdges(startVertex, endVertex, startPolygon) {
+    const [inEdge, outEdge] = startPolygon.edgesIncidentToVertex(startVertex);
+
+    const translate = ([x, y]) => [x - startVertex[0], y - startVertex[1]];
+
+    const inVertexAngle  = Math.atan2(...translate(inEdge[0]));
+    const outVertexAngle = Math.atan2(...translate(outEdge[1]));
+    const lineAngle      = Math.atan2(...translate(endVertex));
+
+    const absMod2PI = x => (x + 2 * Math.PI) % (2 * Math.PI);
+
+    const edgesAngle = absMod2PI(outVertexAngle - inVertexAngle);
+    const edgeLineAngle = absMod2PI(outVertexAngle - lineAngle);
+    const eps = 0.00001;
+
+    return edgesAngle < edgeLineAngle + eps;
+}
+
+
+function verticesAreAccessable(vert0, vert1, polygon0, polygon1, polygons) {
     for(const polygon of polygons) {
         for(const edge of polygon.edges()) {
-            // TODO: check if point is accessable
-            accessable.push(edge[0]);
+            // Check for intersection with the edge, but avoid edges incident to
+            // the current vertex to prevent false positives
+            if(edge.indexOf(vert0) == -1 && edge.indexOf(vert1) == -1) {
+                if(linesIntersect(edge, [vert0, vert1])) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    if(!lineIsBetweenEdges(vert0, vert1, polygon0)) {
+        return false;
+    }
+
+    return true;
+}
+
+
+function getAccessableVertices(vertex, polygons, polygon = null) {
+    const accessable = [];
+
+    for(const otherPolygon of polygons) {
+        for(const otherVertex of otherPolygon.vertices) {
+            if(!verticesAreAccessable(vertex, otherVertex, polygon, otherPolygon, polygons)) {
+                continue;
+            }
+
+            accessable.push(otherVertex);
         }
     }
 
@@ -66,30 +110,18 @@ function getAccessableVertices(vertex, polygons) {
 const renderer = new Renderer();
 const obstacles = generateObstacles(window.innerWidth, window.innerHeight);
 
-/*
+
 for(const polygon of obstacles) {
     renderer.drawPolygon(polygon, "#888", "#555");
 }
 
-// Arbitrary test point
-const vertex = obstacles[50].vertices[3];
-const accessable = getAccessableVertices(vertex, obstacles);
 
-for(const other of accessable) {
-    renderer.drawLine(...vertex, ...other, "red");
+for(const polygon of obstacles) {
+    for(const vertex of polygon.vertices) {
+        const accessable = getAccessableVertices(vertex, obstacles, polygon);
+
+        for(const other of accessable) {
+            renderer.drawLine(...vertex, ...other, "blue");
+        }
+    }
 }
-*/
-
-
-
-// Random test of line intersection detection
-const randPoint = () => [
-    Math.random() * window.innerWidth,
-    Math.random() * window.innerHeight];
-
-const line0 = [randPoint(), randPoint()];
-const line1 = [randPoint(), randPoint()];
-const intersect = linesIntersect(line0, line1);
-
-renderer.drawLine(...line0[0], ...line0[1], intersect ? "red" : "green");
-renderer.drawLine(...line1[0], ...line1[1], intersect ? "red" : "green");

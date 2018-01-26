@@ -4,7 +4,6 @@ class Polygon {
     }
 
     static createRandomPolygon(x, y, size, minSize = size * 0.3) {
-
         const mix = (ratio, start, end) => ratio * (end - start) + start;
         const randInRange = (low, high) => mix(Math.random(), low, high);
 
@@ -21,7 +20,7 @@ class Polygon {
             const distance = mix(
                 lastDistanceWeight, randInRange(minSize, size), lastDistance);
 
-            const theta = vert / numVerts * Math.PI * 2;
+            const theta = -vert / numVerts * Math.PI * 2;
             vertices.push([
                 x + Math.sin(theta) * distance,
                 y + Math.cos(theta) * distance
@@ -37,10 +36,23 @@ class Polygon {
             yield [this.vertices[index], this.vertices[(index + 1) % len]];
         }
     }
+
+    edgesIncidentToVertex(vertex) {
+        let inEdge = null, outEdge = null;
+        for(const edge of this.edges()) {
+            if(edge[0] == vertex) {
+                outEdge = edge;
+            }
+            else if(edge[1] == vertex) {
+                inEdge = edge;
+            }
+        }
+        return [inEdge, outEdge];
+    }
 }
 
 function generateObstacles(width, height) {
-    const numObstacles = 100;
+    const numObstacles = 10;
     const startSizeDivisor = 10;
     const sizeChangeRate = 0.99;
     const minSize = 0.1;
