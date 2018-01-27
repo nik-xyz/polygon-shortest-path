@@ -49,8 +49,8 @@ function linesIntersect(line0, line1) {
 }
 
 
-function lineIsBetweenEdges(startVertex, endVertex, startPolygon) {
-    const [inEdge, outEdge] = startPolygon.edgesIncidentToVertex(startVertex);
+function lineInterceptsPolygon(startVertex, endVertex, polygon) {
+    const [inEdge, outEdge] = polygon.edgesIncidentToVertex(startVertex);
 
     const translate = ([x, y]) => [x - startVertex[0], y - startVertex[1]];
 
@@ -64,40 +64,61 @@ function lineIsBetweenEdges(startVertex, endVertex, startPolygon) {
     const edgeLineAngle = absMod2PI(outVertexAngle - lineAngle);
     const eps = 0.00001;
 
-    return edgesAngle < edgeLineAngle + eps;
+    return edgesAngle > edgeLineAngle + eps;
 }
 
 
-function verticesAreAccessable(vert0, vert1, polygon0, polygon1, polygons) {
+// Checks whether startVertex and endVertex can be connected by a straight line
+// that does not intercept any polygons in
+function verticesAreNeighbors(startVertex, endVertex, polygons) {
+    // Check that the line between the start and end vertices does not intersect
+    // the edges of obstacle, except for the edges that are directly connected
+    // to the start and end vertices. These edges will always technically
+    // intersect the line so they are avoided.
+
+    let startPolygon = null;
     for(const polygon of polygons) {
         for(const edge of polygon.edges()) {
-            // Check for intersection with the edge, but avoid edges incident to
-            // the current vertex to prevent false positives
-            if(edge.indexOf(vert0) == -1 && edge.indexOf(vert1) == -1) {
-                if(linesIntersect(edge, [vert0, vert1])) {
+            if(edge.indexOf(startVertex) != -1) {
+                // Record which polygon contains the start vertex for further
+                // further intercept testing
+                startPolygon = polygon;
+            }
+            else if(edge.indexOf(endVertex) != -1) {
+            }
+            else {
+                if(linesIntersect(edge, [startVertex, endVertex])) {
                     return false;
                 }
             }
         }
     }
 
-    if(!lineIsBetweenEdges(vert0, vert1, polygon0)) {
-        return false;
+    // Check that the line between the start and end vertices does not intersect
+    // a polygon in the event that both vertices are part of the same polygon.
+    if(startPolygon != null) {
+        if(lineInterceptsPolygon(startVertex, endVertex, startPolygon)) {
+            return false;
+        }
     }
 
     return true;
 }
 
 
-function getAccessableVertices(vertex, polygons, polygon = null) {
+function getNeighbors(vertex, polygons, otherVertices = []) {
     const accessable = [];
 
     for(const otherPolygon of polygons) {
         for(const otherVertex of otherPolygon.vertices) {
-            if(!verticesAreAccessable(vertex, otherVertex, polygon, otherPolygon, polygons)) {
-                continue;
+            if(verticesAreNeighbors(vertex, otherVertex, polygons)) {
+                accessable.push(otherVertex);
             }
+        }
+    }
 
+    for(const otherVertex of otherVertices) {
+        if(verticesAreNeighbors(vertex, otherVertex, polygons)) {
             accessable.push(otherVertex);
         }
     }
@@ -106,22 +127,71 @@ function getAccessableVertices(vertex, polygons, polygon = null) {
 }
 
 
+function search(start, end, obstacles) {
+    const border = new HeapQueue((a, b) => a.estimate < b.estimate);
+    const visited = new Set();
+    const paths = new Map();
+
+    border.add({vertex: start, prev: null, cost: 0, estimate: 0});
+
+    while(!border.empty()) {
+        const {vertex: vertex, cost: cost, prev: prev} = border.pop();
+
+        if(visited.has(vertex)) {
+            continue;
+        }
+        paths.set(vertex, prev);
+        visited.add(vertex);
+
+        if(vertex == end) {
+            let backtraceVertex = vertex;
+            const path = [];
+
+            while(paths.get(backtraceVertex) != null) {
+                const prevVertex = paths.get(backtraceVertex);
+                path.push([prevVertex, backtraceVertex]);
+                backtraceVertex = prevVertex;
+            }
+            return path;
+        }
+
+        for(const neighbor of getNeighbors(vertex, obstacles, [end])) {
+            if(!visited.has(neighbor)) {
+                const dist = ([x, y]) => Math.hypot(neighbor[0] - x, neighbor[1] - y);
+                
+                border.add({
+                    vertex: neighbor,
+                    prev: vertex,
+                    cost:     cost + dist(vertex),
+                    estimate: cost + dist(vertex) + dist(end)
+                });
+            }
+        }
+    }
+
+    return null;
+}
+
 
 const renderer = new Renderer();
-const obstacles = generateObstacles(window.innerWidth, window.innerHeight);
 
+const start = [0,                 Math.random() * window.innerHeight];
+const end   = [window.innerWidth, Math.random() * window.innerHeight];
+
+const reservedPoints = [start.concat(10), end.concat(10)];
+const obstacles = generateObstacles(window.innerWidth, window.innerHeight, reservedPoints);
 
 for(const polygon of obstacles) {
     renderer.drawPolygon(polygon, "#888", "#555");
 }
 
+const path = search(start, end, obstacles);
 
-for(const polygon of obstacles) {
-    for(const vertex of polygon.vertices) {
-        const accessable = getAccessableVertices(vertex, obstacles, polygon);
-
-        for(const other of accessable) {
-            renderer.drawLine(...vertex, ...other, "blue");
-        }
+if(path == null) {
+    alert("Didn't find a path");
+}
+else {
+    for([prev, next] of path) {
+        renderer.drawLine(...prev, ...next, "green", 2);
     }
 }

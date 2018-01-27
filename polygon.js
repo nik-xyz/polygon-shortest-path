@@ -51,8 +51,8 @@ class Polygon {
     }
 }
 
-function generateObstacles(width, height) {
-    const numObstacles = 10;
+function generateObstacles(width, height, reservedPoints) {
+    const numObstacles = 100;
     const startSizeDivisor = 10;
     const sizeChangeRate = 0.99;
     const minSize = 0.1;
@@ -68,7 +68,7 @@ function generateObstacles(width, height) {
             const y = Math.random() * height;
 
             let valid = true;
-            for(const [otherX, otherY, otherSize] of positions) {
+            for(const [otherX, otherY, otherSize] of positions.concat(reservedPoints)) {
                 if(Math.hypot(otherX - x, otherY - y) < size + otherSize) {
                     valid = false;
                     break;
