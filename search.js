@@ -58,13 +58,18 @@ function lineInterceptsPolygon(startVertex, endVertex, polygon) {
     const outVertexAngle = Math.atan2(...translate(outEdge[1]));
     const lineAngle      = Math.atan2(...translate(endVertex));
 
-    const absMod2PI = x => (x + 2 * Math.PI) % (2 * Math.PI);
-
-    const edgesAngle = absMod2PI(outVertexAngle - inVertexAngle);
-    const edgeLineAngle = absMod2PI(outVertexAngle - lineAngle);
     const eps = 0.00001;
+    if(outVertexAngle - eps <= lineAngle && lineAngle <= inVertexAngle + eps) {
+        return false;
+    }
+    if(lineAngle - eps <= inVertexAngle && inVertexAngle <= outVertexAngle + eps) {
+        return false;
+    }
+    if(inVertexAngle - eps <= outVertexAngle && outVertexAngle <= lineAngle + eps) {
+        return false;
+    }
 
-    return edgesAngle > edgeLineAngle + eps;
+    return true;
 }
 
 
@@ -155,7 +160,7 @@ function search(start, end, obstacles) {
         for(const neighbor of getNeighbors(vertex, obstacles, [end])) {
             if(!visited.has(neighbor)) {
                 const dist = ([x, y]) => Math.hypot(neighbor[0] - x, neighbor[1] - y);
-                
+
                 border.add({
                     vertex: neighbor,
                     prev: vertex,
