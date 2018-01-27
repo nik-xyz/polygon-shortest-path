@@ -129,28 +129,25 @@ function getNeighbors(vertex, polygons, otherVertices = []) {
 
 function search(start, end, obstacles) {
     const border = new HeapQueue((a, b) => a.estimate < b.estimate);
-    const visited = new Set();
-    const paths = new Map();
+    const visited = new Map();
 
     border.add({vertex: start, prev: null, cost: 0, estimate: 0});
 
     while(!border.empty()) {
-        const {vertex: vertex, cost: cost, prev: prev} = border.pop();
+        let {vertex: vertex, cost: cost, prev: prev} = border.pop();
 
         if(visited.has(vertex)) {
             continue;
         }
-        paths.set(vertex, prev);
-        visited.add(vertex);
+        visited.set(vertex, prev);
 
         if(vertex == end) {
-            let backtraceVertex = vertex;
             const path = [];
 
-            while(paths.get(backtraceVertex) != null) {
-                const prevVertex = paths.get(backtraceVertex);
-                path.push([prevVertex, backtraceVertex]);
-                backtraceVertex = prevVertex;
+            while(visited.get(vertex) != null) {
+                const prevVertex = visited.get(vertex);
+                path.push([prevVertex, vertex]);
+                vertex = prevVertex;
             }
             return path;
         }
@@ -170,28 +167,4 @@ function search(start, end, obstacles) {
     }
 
     return null;
-}
-
-
-const renderer = new Renderer();
-
-const start = [0,                 Math.random() * window.innerHeight];
-const end   = [window.innerWidth, Math.random() * window.innerHeight];
-
-const reservedPoints = [start.concat(10), end.concat(10)];
-const obstacles = generateObstacles(window.innerWidth, window.innerHeight, reservedPoints);
-
-for(const polygon of obstacles) {
-    renderer.drawPolygon(polygon, "#888", "#555");
-}
-
-const path = search(start, end, obstacles);
-
-if(path == null) {
-    alert("Didn't find a path");
-}
-else {
-    for([prev, next] of path) {
-        renderer.drawLine(...prev, ...next, "green", 2);
-    }
 }

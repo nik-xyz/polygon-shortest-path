@@ -52,7 +52,7 @@ class Polygon {
 }
 
 function generateObstacles(width, height, reservedPoints) {
-    const numObstacles = 100;
+    const numObstacles = 30;
     const startSizeDivisor = 10;
     const sizeChangeRate = 0.99;
     const minSize = 0.1;

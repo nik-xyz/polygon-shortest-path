@@ -2,6 +2,7 @@ class Renderer {
     constructor() {
         this.canvas = document.getElementById("render-output");
         this.cxt = this.canvas.getContext("2d");
+        this.resizeHandler = () => {};
 
         window.addEventListener("resize", () => this.setCanvasSize());
         this.setCanvasSize();
@@ -10,6 +11,24 @@ class Renderer {
     setCanvasSize() {
         this.canvas.width  = window.innerWidth;
         this.canvas.height = window.innerHeight;
+        this.resizeHandler();
+    }
+
+    setResizeHandler(resizeHandler) {
+        this.resizeHandler = resizeHandler;
+    }
+
+    getSize() {
+        return [this.canvas.width, this.canvas.height];
+    }
+
+    clear(color) {
+        const cxt = this.cxt;
+        cxt.fillStyle = color;
+
+        cxt.beginPath();
+        cxt.rect(0, 0, this.canvas.width, this.canvas.height)
+        cxt.fill();
     }
 
     drawLine(sx, sy, ex, ey, color, thickness = 1) {
@@ -37,5 +56,16 @@ class Renderer {
         cxt.closePath();
         cxt.fill();
         cxt.stroke();
+    }
+
+    drawCircle(x, y, radius, fillColor, thickness = 2) {
+        const cxt = this.cxt;
+        cxt.fillStyle = fillColor;
+        cxt.lineWidth = thickness;
+
+        cxt.beginPath();
+        cxt.arc(x, y, radius, 0, Math.PI * 2)
+        cxt.closePath();
+        cxt.fill();
     }
 }
