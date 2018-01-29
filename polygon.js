@@ -3,7 +3,7 @@ class Polygon {
         this.vertices = vertices;
     }
 
-    static createRandomPolygon(x, y, size, minSize = size * 0.3) {
+    static createRandomPolygon(pos, size, minSize = size * 0.3) {
         const mix = (ratio, start, end) => ratio * (end - start) + start;
         const randInRange = (low, high) => mix(Math.random(), low, high);
 
@@ -20,11 +20,8 @@ class Polygon {
             const distance = mix(
                 lastDistanceWeight, randInRange(minSize, size), lastDistance);
 
-            const theta = -vert / numVerts * Math.PI * 2;
-            vertices.push([
-                x + Math.sin(theta) * distance,
-                y + Math.cos(theta) * distance
-            ]);
+            const theta = vert / numVerts * Math.PI * 2;
+            vertices.push(pos.add(new Mat2(theta).mul(new Vec2(0, distance))));
         }
 
         return new Polygon(vertices);
@@ -49,38 +46,4 @@ class Polygon {
         }
         return [inEdge, outEdge];
     }
-}
-
-function generateObstacles(width, height, reservedPoints) {
-    const numObstacles = 30;
-    const startSizeDivisor = 10;
-    const sizeChangeRate = 0.99;
-    const minSize = 0.1;
-    const placementAttempts = 10;
-
-    const positions = [];
-
-    let size = Math.min(width, height) / startSizeDivisor;
-
-    while(positions.length < numObstacles && size > minSize) {
-        for(let attempt = 0; attempt < placementAttempts; attempt++) {
-            const x = Math.random() * width;
-            const y = Math.random() * height;
-
-            let valid = true;
-            for(const [otherX, otherY, otherSize] of positions.concat(reservedPoints)) {
-                if(Math.hypot(otherX - x, otherY - y) < size + otherSize) {
-                    valid = false;
-                    break;
-                }
-            }
-            if(valid) {
-                positions.push([x, y, size]);
-                break;
-            }
-        }
-        size *= sizeChangeRate;
-    }
-
-    return positions.map(pos => Polygon.createRandomPolygon(...pos));
 }

@@ -15,19 +15,18 @@ class App {
     handleClick(evt) {
         evt.preventDefault();
 
-        const mousePoint = [evt.offsetX, evt.offsetY];
         if(evt.button == 0) {
-            this.start = mousePoint;
+            this.start = new Vec2(evt.offsetX, evt.offsetY);
         }
         else if(evt.button == 2) {
-            this.end = mousePoint;
+            this.end = new Vec2(evt.offsetX, evt.offsetY);
         }
 
         this.search();
     }
 
     handleResize() {
-        this.pickEndpoints();
+        this.pickDefaultEndpoints();
         this.createObstacles();
         this.search();
     }
@@ -37,18 +36,11 @@ class App {
         this.draw();
     }
 
-    pickEndpoints() {
+    pickDefaultEndpoints() {
         // Pick start points on oppisite sides of the screen
-        const [width, height] = this.renderer.getSize();
-        this.start = [0,     Math.random() * height];
-        this.end   = [width, Math.random() * height];
-    }
-
-    createObstacles() {
-        // Prevent any obstacles being placed over the start and end points
-        const reservedPoints = [this.start.concat(10), this.end.concat(10)];
-        const [width, height] = this.renderer.getSize();
-        this.obstacles = generateObstacles(width, height, reservedPoints);
+        const size = this.renderer.getSize();
+        this.start = new Vec2(0,      Math.random() * size.y);
+        this.end   = new Vec2(size.x, Math.random() * size.y);
     }
 
     draw() {
@@ -59,14 +51,49 @@ class App {
         }
 
         for(const vertex of [this.start, this.end]) {
-            this.renderer.drawCircle(...vertex, 10, "green");
+            this.renderer.drawCircle(vertex, 10, "green");
         }
 
         if(this.path != null) {
             for(const [prev, next] of this.path) {
-                this.renderer.drawLine(...prev, ...next, "green", 2);
+                this.renderer.drawLine(prev, next, "green", 2);
             }
         }
+    }
+
+    createObstacles() {
+        const numObstacles = 30;
+        const startSizeDivisor = 10;
+        const sizeChangeRate = 0.99;
+        const minSize = 0.1;
+        const placementAttempts = 10;
+
+        const size = this.renderer.getSize();
+
+        let currentSize = Math.min(size.x, size.y) / startSizeDivisor;
+        const obstacles = [];
+
+        while(obstacles.length < numObstacles && currentSize > minSize) {
+            for(let attempt = 0; attempt < placementAttempts; attempt++) {
+                const position = size.mul(new Vec2(Math.random(), Math.random()));
+
+                const checkValid = ([otherPosition, otherSize]) =>
+                    position.length(otherPosition) >= currentSize + otherSize;
+
+                const valid =
+                    obstacles.every(checkValid) &&
+                    checkValid([this.start, 10]) &&
+                    checkValid([this.end,   10]);
+
+                if(valid) {
+                    obstacles.push([position, currentSize]);
+                    break;
+                }
+            }
+            currentSize *= sizeChangeRate;
+        }
+
+        this.obstacles = obstacles.map(pos => Polygon.createRandomPolygon(...pos));
     }
 }
 
