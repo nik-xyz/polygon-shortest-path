@@ -32,7 +32,11 @@ class App {
     }
 
     search() {
+        const startTime = Date.now();
         this.path = search(this.start, this.end, this.obstacles);
+        const endTime = Date.now();
+        console.log(`Search completed in ${endTime - startTime} ms`);
+
         this.draw();
     }
 
@@ -62,7 +66,7 @@ class App {
     }
 
     createObstacles() {
-        const numObstacles = 30;
+        const numObstacles = 100;
         const startSizeDivisor = 10;
         const sizeChangeRate = 0.99;
         const minSize = 0.1;

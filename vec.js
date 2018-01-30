@@ -19,6 +19,10 @@ class Vec2 {
     length(vec = new Vec2(0, 0)) {
         return Math.hypot(this.x - vec.x, this.y - vec.y);
     }
+
+    angle() {
+        return Math.atan2(this.x, this.y);
+    }
 }
 
 
