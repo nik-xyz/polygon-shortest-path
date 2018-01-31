@@ -3,6 +3,7 @@ class Polygon {
         this.vertices = vertices;
     }
 
+
     static createRandomPolygon(pos, size, minSize = size * 0.3) {
         const mix = (ratio, start, end) => ratio * (end - start) + start;
         const randInRange = (low, high) => mix(Math.random(), low, high);
@@ -27,12 +28,14 @@ class Polygon {
         return new Polygon(vertices);
     }
 
+
     *edges() {
         const len = this.vertices.length;
         for(let index = 0; index < len; index++) {
             yield [this.vertices[index], this.vertices[(index + 1) % len]];
         }
     }
+
 
     edgesIncidentToVertex(vertex) {
         let inEdge = null, outEdge = null;
@@ -45,5 +48,37 @@ class Polygon {
             }
         }
         return [inEdge, outEdge];
+    }
+
+
+    move(vec) {
+        for(let index = 0; index < this.vertices.length; index++) {
+            this.vertices[index] = this.vertices[index].add(vec);
+        }
+    }
+
+
+    containsPoint(point) {
+        const pointOffset = 100000;
+
+        let furthestPoint = new Vec2(this.vertices[0].x, this.vertices[0].y);
+
+        for(const vertex of this.vertices) {
+            furthestPoint.x = Math.max(furthestPoint.x, vertex.x);
+            furthestPoint.y = Math.max(furthestPoint.y, vertex.y);
+        }
+
+        furthestPoint.x += pointOffset;
+
+        const line = [point, furthestPoint];
+
+        let numIntersections = 0;
+        for(const edge of this.edges()) {
+            if(linesIntersect(line, edge)) {
+                numIntersections++;
+            }
+        }
+
+        return (numIntersections % 2) == 1;
     }
 }

@@ -8,9 +8,44 @@
             margin: 0;
             overflow: hidden;
         }
+
+        #info-box {
+            position: absolute;
+            right: 0;
+            background-color: rgba(30, 30, 30, 0.8);
+            border: 1px solid #555;
+            font-family: sans-serif;
+            font-weight: lighter;
+            color: #FFF;
+            text-align: center;
+            padding: 10px;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        h1 {
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
+    <div id="info-box">
+        <h1> A* polygon path finder </h1>
+        <br/>
+        <p>
+            Obstacles and path endpoints
+            <br/>
+            can be dragged with the mouse.
+        </p>
+        <br/>
+        <p>
+            Double-click anywhere to display
+            <br/>
+            all vertices that can be reached
+            <br/>
+            from that point.
+        </p>
+    </div>
     <canvas id="render-output"></canvas>
 
     <script src="vec.js"></script>
